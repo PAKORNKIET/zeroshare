@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     token: linkRow.token,
-    url: `https://zeroshare.co/s/${linkRow.token}`,
+    url: `${req.nextUrl.origin}/s/${linkRow.token}`,
     file_name: fileRow.name,
     size: fileRow.size,
     expires_at: linkRow.expires_at,

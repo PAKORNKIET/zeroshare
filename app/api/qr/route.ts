@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     id: data.id,
     short_code: data.short_code,
-    short_url: `https://zeroshare.co/${data.short_code}`,
+    short_url: `${req.nextUrl.origin}/${data.short_code}`,
     type: data.type,
     destination: data.destination,
     expires_at: data.expires_at,
