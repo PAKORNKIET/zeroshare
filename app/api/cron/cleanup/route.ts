@@ -30,25 +30,7 @@ export async function GET(req: NextRequest) {
   const provided = bearerSecret ?? legacySecret;
 
   if (!provided || provided !== process.env.CRON_SECRET) {
-    // TEMPORARY DEBUG — remove once the mismatch is found. Never returns
-    // the actual secret values, only lengths/previews, so this is safe to
-    // leave visible in a response while debugging.
-    return NextResponse.json(
-      {
-        error: 'Unauthorized',
-        debug: {
-          authHeaderPresent: !!authHeader,
-          authHeaderPreview: authHeader ? authHeader.slice(0, 15) + '...' : null,
-          providedLength: provided?.length ?? 0,
-          providedPreview: provided ? provided.slice(0, 4) + '...' + provided.slice(-4) : null,
-          envSecretLength: process.env.CRON_SECRET?.length ?? 0,
-          envSecretPreview: process.env.CRON_SECRET
-            ? process.env.CRON_SECRET.slice(0, 4) + '...' + process.env.CRON_SECRET.slice(-4)
-            : null,
-        },
-      },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const supabase = getSupabaseAdmin();
