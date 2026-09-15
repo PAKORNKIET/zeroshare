@@ -8,7 +8,6 @@ import { createClient } from '@supabase/supabase-js';
 export function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  console.log('DEBUG service key length:', serviceKey?.length, 'starts with:', serviceKey?.slice(0, 6));
 
   if (!url || !serviceKey) {
     throw new Error(
