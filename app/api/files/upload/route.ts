@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID, randomBytes, scryptSync } from 'crypto';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { getSupabaseServer } from '@/lib/supabase-server';
+import { getOrCreateAppUser } from '@/lib/app-user';
 import { uploadToR2 } from '@/lib/r2';
 
 function randomToken(length = 6): string {
@@ -35,6 +37,16 @@ function expiryToDate(expiry: string): string | null {
   return new Date(now.getTime() + ms).toISOString();
 }
 
+/**
+ * POST /api/files/upload
+ * multipart/form-data fields:
+ *   file            — the file itself (required)
+ *   expiry          — '1h' | '6h' | ... | '30d' | 'permanent' | 'custom' (default '24h')
+ *   customExpiresAt — ISO date, required when expiry === 'custom'
+ *   downloadLimit   — optional integer, max number of downloads
+ *   password        — optional string, required to open the link
+ *   oneTime         — optional 'true' | 'false', link dies after first download
+ */
 export async function POST(req: NextRequest) {
   let form: FormData;
   try {
@@ -60,7 +72,8 @@ export async function POST(req: NextRequest) {
   const downloadLimit = downloadLimitRaw ? parseInt(downloadLimitRaw, 10) : null;
   const expires_at = expiry === 'custom' ? customExpiresAt : expiryToDate(expiry);
 
-  const MAX_FILE_SIZE = 200 * 1024 * 1024;
+  // Basic guardrails — tune these as real usage limits get defined.
+  const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200 MB per file for now
   if (file.size > MAX_FILE_SIZE) {
     return NextResponse.json(
       { error: `File exceeds the ${MAX_FILE_SIZE / (1024 * 1024)} MB limit` },
@@ -83,6 +96,23 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Guests stay anonymous (owner_id null); logged-in users get their files
+  // attached so the dashboard can list them later.
+  let owner_id: string | null = null;
+  try {
+    const authClient = await getSupabaseServer();
+    const { data: authData } = await authClient.auth.getUser();
+    if (authData.user) {
+      owner_id = await getOrCreateAppUser(
+        supabase,
+        authData.user.id,
+        authData.user.email ?? null
+      );
+    }
+  } catch {
+    // Auth lookup failing should never block an otherwise valid guest upload.
+  }
+
   const { data: fileRow, error: fileError } = await supabase
     .from('files')
     .insert({
@@ -93,6 +123,7 @@ export async function POST(req: NextRequest) {
       storage_key: storageKey,
       expires_at,
       download_limit: downloadLimit,
+      owner_id,
     })
     .select()
     .single();

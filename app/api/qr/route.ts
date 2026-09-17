@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { getSupabaseServer } from '@/lib/supabase-server';
+import { getOrCreateAppUser } from '@/lib/app-user';
 
 function randomShortCode(length = 6): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -81,6 +83,23 @@ export async function POST(req: NextRequest) {
     short_code = randomShortCode();
   }
 
+  // Guests stay anonymous (owner_id null); logged-in users get their codes
+  // attached so the dashboard can list them later.
+  let owner_id: string | null = null;
+  try {
+    const authClient = await getSupabaseServer();
+    const { data: authData } = await authClient.auth.getUser();
+    if (authData.user) {
+      owner_id = await getOrCreateAppUser(
+        supabase,
+        authData.user.id,
+        authData.user.email ?? null
+      );
+    }
+  } catch {
+    // Auth lookup failing should never block an otherwise valid guest request.
+  }
+
   const { data, error } = await supabase
     .from('qr_codes')
     .insert({
@@ -88,6 +107,7 @@ export async function POST(req: NextRequest) {
       destination,
       short_code,
       expires_at,
+      owner_id,
     })
     .select()
     .single();
