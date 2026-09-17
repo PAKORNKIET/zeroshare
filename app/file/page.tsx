@@ -44,19 +44,35 @@ export default function FilePage() {
 
     setBusy(true);
     try {
-      const form = new FormData();
-      form.append('file', file);
-      form.append('expiry', expiry);
-      if (downloadLimit) form.append('downloadLimit', downloadLimit);
-      if (passwordEnabled && password) form.append('password', password);
-      form.append('oneTime', String(oneTime));
+      // Step 1 — ask the server to create the file/link records and hand
+      // back a signed URL for the browser to upload to directly.
+      const presignRes = await fetch('/api/files/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          expiry,
+          downloadLimit: downloadLimit ? Number(downloadLimit) : undefined,
+          password: passwordEnabled ? password : undefined,
+          oneTime,
+        }),
+      });
+      const presignBody = await presignRes.json();
+      if (!presignRes.ok) throw new Error(presignBody.error || 'Could not start the upload.');
 
-      const res = await fetch('/api/files/upload', { method: 'POST', body: form });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error || 'Upload failed.');
+      // Step 2 — upload the file bytes straight to R2, bypassing our
+      // server (and its request-size limit) entirely.
+      const uploadRes = await fetch(presignBody.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file,
+      });
+      if (!uploadRes.ok) throw new Error('Upload to storage failed.');
 
-      setResult(body);
-      const dataUrl = await QRCode.toDataURL(body.url, { width: 160, margin: 1 });
+      setResult(presignBody);
+      const dataUrl = await QRCode.toDataURL(presignBody.url, { width: 160, margin: 1 });
       setQrImage(dataUrl);
     } catch (err) {
       setError((err as Error).message);

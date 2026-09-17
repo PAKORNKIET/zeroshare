@@ -29,16 +29,28 @@ export default function QuickDropPage() {
     setError(null);
     setBusy(true);
     try {
-      const form = new FormData();
-      form.append('file', f);
-      form.append('expiry', '24h'); // sensible Quick Drop default
+      const presignRes = await fetch('/api/files/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: f.name,
+          fileType: f.type,
+          fileSize: f.size,
+          expiry: '24h', // sensible Quick Drop default
+        }),
+      });
+      const presignBody = await presignRes.json();
+      if (!presignRes.ok) throw new Error(presignBody.error || 'Could not start the upload.');
 
-      const res = await fetch('/api/files/upload', { method: 'POST', body: form });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error || 'Upload failed.');
+      const uploadRes = await fetch(presignBody.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': f.type || 'application/octet-stream' },
+        body: f,
+      });
+      if (!uploadRes.ok) throw new Error('Upload to storage failed.');
 
-      setResult(body);
-      const dataUrl = await QRCode.toDataURL(body.url, { width: 160, margin: 1 });
+      setResult(presignBody);
+      const dataUrl = await QRCode.toDataURL(presignBody.url, { width: 160, margin: 1 });
       setQrImage(dataUrl);
     } catch (err) {
       setError((err as Error).message);

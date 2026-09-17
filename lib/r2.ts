@@ -22,7 +22,6 @@ export function getR2Client() {
   return new S3Client({
     region: 'auto',
     endpoint: getEnv('R2_ENDPOINT'),
-    forcePathStyle: true,
     credentials: {
       accessKeyId: getEnv('R2_ACCESS_KEY_ID'),
       secretAccessKey: getEnv('R2_SECRET_ACCESS_KEY'),
@@ -53,6 +52,25 @@ export async function getR2DownloadUrl(storageKey: string, expiresInSeconds = 30
   const command = new GetObjectCommand({
     Bucket: getEnv('R2_BUCKET_NAME'),
     Key: storageKey,
+  });
+  return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
+}
+
+/**
+ * Generate a time-limited signed URL so the browser can PUT the file bytes
+ * directly to R2 — bypassing Vercel's ~4.5MB serverless request body limit
+ * entirely, since the file never passes through our server.
+ */
+export async function getR2UploadUrl(
+  storageKey: string,
+  contentType: string,
+  expiresInSeconds = 600
+) {
+  const client = getR2Client();
+  const command = new PutObjectCommand({
+    Bucket: getEnv('R2_BUCKET_NAME'),
+    Key: storageKey,
+    ContentType: contentType,
   });
   return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
 }
