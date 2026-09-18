@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import QRCode from 'qrcode';
+import AdSlot from '@/components/AdSlot';
 
 type QrType = 'url' | 'file' | 'dynamic';
 
@@ -155,12 +156,7 @@ export default function QrPage() {
           </div>
         )}
       </div>
-      <div className="adslot">
-        <svg className="icon">
-          <use href="#i-mega" />
-        </svg>
-        Advertisement space — qr_generator
-      </div>
+      <AdSlot placement="qr_generator" />
     </div>
   );
 }

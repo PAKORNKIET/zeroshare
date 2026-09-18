@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import QRCode from 'qrcode';
+import AdSlot from '@/components/AdSlot';
 
 type UploadResult = {
   token: string;
@@ -225,12 +226,7 @@ export default function FilePage() {
           </>
         )}
       </div>
-      <div className="adslot">
-        <svg className="icon">
-          <use href="#i-mega" />
-        </svg>
-        Advertisement space — file_share
-      </div>
+      <AdSlot placement="file_share" />
     </div>
   );
 }

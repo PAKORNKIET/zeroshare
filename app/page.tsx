@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import AdSlot from '@/components/AdSlot';
 
 export default function HomePage() {
   return (
@@ -36,12 +37,7 @@ export default function HomePage() {
           </Link>
         </div>
       </div>
-      <div className="adslot">
-        <svg className="icon">
-          <use href="#i-mega" />
-        </svg>
-        Advertisement space — homepage top
-      </div>
+      <AdSlot placement="homepage_top" />
     </div>
   );
 }
