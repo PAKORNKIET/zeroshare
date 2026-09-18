@@ -83,7 +83,11 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
           // Safe to ignore candidates that arrive before the remote description.
         }
       })
-      .subscribe();
+      .subscribe((subStatus) => {
+        if (subStatus === 'SUBSCRIBED') {
+          channel.send({ type: 'broadcast', event: 'join', payload: {} });
+        }
+      });
 
     return () => {
       pc.close();

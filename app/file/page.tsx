@@ -112,6 +112,16 @@ export default function FilePage() {
     };
 
     channel
+      .on('broadcast', { event: 'join' }, async () => {
+        try {
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          channel.send({ type: 'broadcast', event: 'offer', payload: { sdp: offer } });
+        } catch (err) {
+          setLiveError((err as Error).message);
+          setLiveStatus('error');
+        }
+      })
       .on('broadcast', { event: 'answer' }, async ({ payload }) => {
         try {
           await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
@@ -127,13 +137,7 @@ export default function FilePage() {
           // Candidates arriving before remote description is set are safe to drop.
         }
       })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-          channel.send({ type: 'broadcast', event: 'offer', payload: { sdp: offer } });
-        }
-      });
+      .subscribe();
   }
 
   function resetRoom() {
