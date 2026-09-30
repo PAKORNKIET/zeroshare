@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useRef, useState, use } from 'react';
 import { createPeerConnection, getSignalingChannel, JOIN_RETRY_MS } from '@/lib/webrtc';
+import Mascot from '@/components/Mascot';
 
 type Status = 'connecting' | 'connected' | 'receiving' | 'done' | 'error';
 
@@ -117,12 +117,10 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
   return (
     <div className="solo">
       <div className="card solo-card">
-        <Link href="/" className="brand">
-          <div className="mark" />
-          <div className="word">
-            Zero<span>Share</span>
-          </div>
-        </Link>
+        <Mascot
+          mood={status === 'error' ? 'sad' : status === 'done' ? 'happy' : 'wait'}
+          size={112}
+        />
 
         {status === 'connecting' && <p className="sub">Connecting to the sender…</p>}
         {status === 'connected' && <p className="sub">Connected. Waiting for the file…</p>}

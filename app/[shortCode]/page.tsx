@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import Mascot from '@/components/Mascot';
 
 export default async function ShortCodePage({
   params,
@@ -22,12 +22,7 @@ export default async function ShortCodePage({
     return (
       <div className="solo">
         <div className="card solo-card">
-          <Link href="/" className="brand">
-            <div className="mark" />
-            <div className="word">
-              Zero<span>Share</span>
-            </div>
-          </Link>
+          <Mascot mood="sad" size={112} />
           <h1>{expired ? 'This code has expired.' : 'This code does not exist.'}</h1>
           <p className="sub">
             The QR code may have been removed, or reached its expiry date.

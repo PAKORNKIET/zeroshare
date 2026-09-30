@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useState, use } from 'react';
+import Mascot from '@/components/Mascot';
 
 type Meta = {
   file_name: string;
@@ -64,12 +64,7 @@ export default function DownloadPage({
   return (
     <div className="solo">
       <div className="card solo-card">
-        <Link href="/" className="brand">
-          <div className="mark" />
-          <div className="word">
-            Zero<span>Share</span>
-          </div>
-        </Link>
+        <Mascot mood={loadError ? 'sad' : meta ? 'happy' : 'wait'} size={112} />
 
         {loadError && (
           <>

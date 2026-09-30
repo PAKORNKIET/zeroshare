@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import AdSlot from '@/components/AdSlot';
+import Mascot from '@/components/Mascot';
 
 const tools = [
   {
@@ -36,30 +37,33 @@ export default function HomePage() {
   return (
     <div>
       <div className="card hero">
-        <div className="eyebrow">
-          <svg className="icon">
-            <use href="#i-link" />
-          </svg>
-          No account required
-        </div>
-        <h1>Move files without the setup.</h1>
-        <p className="sub">
-          Generate a QR code, share a link, or drop a file — anything you send
-          here disappears on its own.
-        </p>
-        <div className="cta-row">
-          <Link href="/quick" className="btn primary">
+        <Mascot className="hero-mascot" size={210} />
+        <div className="hero-copy">
+          <div className="eyebrow">
             <svg className="icon">
-              <use href="#i-drop" />
+              <use href="#i-link" />
             </svg>
-            Start a Quick Drop
-          </Link>
-          <Link href="/qr" className="btn ghost">
-            <svg className="icon">
-              <use href="#i-qr" />
-            </svg>
-            Create a QR code
-          </Link>
+            No account required
+          </div>
+          <h1>Move files without the setup.</h1>
+          <p className="sub">
+            Generate a QR code, share a link, or drop a file — anything you send
+            here disappears on its own.
+          </p>
+          <div className="cta-row">
+            <Link href="/quick" className="btn light">
+              <svg className="icon">
+                <use href="#i-drop" />
+              </svg>
+              Start a Quick Drop
+            </Link>
+            <Link href="/qr" className="btn glass">
+              <svg className="icon">
+                <use href="#i-qr" />
+              </svg>
+              Create a QR code
+            </Link>
+          </div>
         </div>
       </div>
 

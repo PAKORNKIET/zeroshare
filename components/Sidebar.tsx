@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Mascot from '@/components/Mascot';
 
 const navItems = [
   { href: '/', label: 'Home', short: 'Home', icon: 'i-home' },
@@ -54,6 +55,12 @@ export default function Sidebar() {
             </Link>
           ))}
         </nav>
+
+        <div className="side-card">
+          <Mascot size={76} />
+          <b>Nothing sticks around</b>
+          <span>Links and files clean themselves up when they expire.</span>
+        </div>
 
         <div className="side-footer">About &middot; Privacy &middot; Terms &middot; Contact</div>
       </aside>

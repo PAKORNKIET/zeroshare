@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getSupabaseServer } from '@/lib/supabase-server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import Mascot from '@/components/Mascot';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,18 +26,21 @@ export default async function DashboardPage() {
 
   if (!user) {
     return (
-      <div className="card">
-        <h1 className="page-title">Dashboard</h1>
-        <p className="sub">
-          You&rsquo;re browsing as a guest — everything on Zero Share works without
-          an account. Sign in to keep track of what you&rsquo;ve shared.
-        </p>
-        <Link href="/login" className="btn primary">
-          <svg className="icon">
-            <use href="#i-users" />
-          </svg>
-          Log in
-        </Link>
+      <div className="card empty">
+        <Mascot size={132} />
+        <div>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="sub">
+            You&rsquo;re browsing as a guest — everything on Zero Share works without
+            an account. Sign in to keep track of what you&rsquo;ve shared.
+          </p>
+          <Link href="/login" className="btn primary">
+            <svg className="icon">
+              <use href="#i-users" />
+            </svg>
+            Log in
+          </Link>
+        </div>
       </div>
     );
   }
