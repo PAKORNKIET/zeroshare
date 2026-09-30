@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { requireAdmin } from '@/lib/require-admin';
 import AdminClient from '@/components/AdminClient';
 
@@ -7,23 +7,9 @@ export const dynamic = 'force-dynamic';
 export default async function AdminPage() {
   const admin = await requireAdmin();
 
-  if (!admin) {
-    return (
-      <div className="card">
-        <h1 className="page-title">Admin</h1>
-        <p className="sub">
-          This area is restricted to administrators. If you believe this is a
-          mistake, contact whoever manages this deployment.
-        </p>
-        <Link href="/login" className="btn primary">
-          <svg className="icon">
-            <use href="#i-users" />
-          </svg>
-          Log in
-        </Link>
-      </div>
-    );
-  }
+  // Hide the admin area entirely from everyone else — it isn't linked
+  // anywhere, and non-admins get a plain 404 rather than a hint it exists.
+  if (!admin) notFound();
 
   return <AdminClient />;
 }

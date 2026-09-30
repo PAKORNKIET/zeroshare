@@ -10,14 +10,13 @@ const navItems = [
   { href: '/file', label: 'File share', short: 'Files', icon: 'i-file' },
   { href: '/quick', label: 'Quick Drop', short: 'Drop', icon: 'i-drop' },
   { href: '/dashboard', label: 'Dashboard', short: 'Mine', icon: 'i-grid' },
-  { href: '/admin', label: 'Admin', short: 'Admin', icon: 'i-shield' },
   { href: '/login', label: 'Account', short: 'Account', icon: 'i-users' },
 ];
 
 // On phones the five main destinations live in the bottom tab bar; account
-// and admin move up into the top bar.
-const tabItems = navItems.filter((i) => !['/admin', '/login'].includes(i.href));
-const topItems = navItems.filter((i) => ['/admin', '/login'].includes(i.href));
+// moves up into the top bar.
+const tabItems = navItems.filter((i) => i.href !== '/login');
+const topItems = navItems.filter((i) => i.href === '/login');
 
 function Brand() {
   return (
