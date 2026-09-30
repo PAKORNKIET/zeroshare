@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, use } from 'react';
-import { createPeerConnection, getSignalingChannel } from '@/lib/webrtc';
+import { createPeerConnection, getSignalingChannel, JOIN_RETRY_MS } from '@/lib/webrtc';
 
 type Status = 'connecting' | 'connected' | 'receiving' | 'done' | 'error';
 
@@ -64,8 +64,21 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
       };
     };
 
+    // If we subscribe before the sender does, our first "join" is lost, so
+    // keep re-announcing until an offer arrives.
+    let gotOffer = false;
+    let joinTimer: ReturnType<typeof setInterval> | null = null;
+    const sendJoin = () => channel.send({ type: 'broadcast', event: 'join', payload: {} });
+    const stopJoinRetry = () => {
+      if (joinTimer) clearInterval(joinTimer);
+      joinTimer = null;
+    };
+
     channel
       .on('broadcast', { event: 'offer' }, async ({ payload }) => {
+        if (gotOffer) return;
+        gotOffer = true;
+        stopJoinRetry();
         try {
           await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
           const answer = await pc.createAnswer();
@@ -84,12 +97,14 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
         }
       })
       .subscribe((subStatus) => {
-        if (subStatus === 'SUBSCRIBED') {
-          channel.send({ type: 'broadcast', event: 'join', payload: {} });
+        if (subStatus === 'SUBSCRIBED' && !gotOffer && !joinTimer) {
+          sendJoin();
+          joinTimer = setInterval(sendJoin, JOIN_RETRY_MS);
         }
       });
 
     return () => {
+      stopJoinRetry();
       pc.close();
       channel.unsubscribe();
     };

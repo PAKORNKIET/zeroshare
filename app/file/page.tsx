@@ -111,8 +111,14 @@ export default function FilePage() {
       });
     };
 
+    // The receiver keeps re-sending "join" until it sees an offer, so only
+    // the first one should trigger negotiation.
+    let offerSent = false;
+
     channel
       .on('broadcast', { event: 'join' }, async () => {
+        if (offerSent) return;
+        offerSent = true;
         try {
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);

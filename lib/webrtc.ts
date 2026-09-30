@@ -21,3 +21,8 @@ export function getSignalingChannel(roomCode: string) {
 }
 
 export const CHUNK_SIZE = 16 * 1024; // 16 KB per data-channel message
+
+// How often the receiver re-announces itself until the sender answers with
+// an offer. Covers the case where the receiver joins before the sender's
+// channel has finished subscribing and the first "join" is lost.
+export const JOIN_RETRY_MS = 1500;
