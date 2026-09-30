@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState, use } from 'react';
 import { createPeerConnection, getSignalingChannel, JOIN_RETRY_MS } from '@/lib/webrtc';
 
@@ -114,32 +115,35 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
   const progressPct = meta && meta.size > 0 ? Math.min(100, Math.round((received / meta.size) * 100)) : 0;
 
   return (
-    <div style={styles.page}>
-      <div style={styles.card}>
-        <div style={styles.brand}>
-          <div style={styles.mark} />
-          <span style={styles.brandWord}>
-            Zero<span style={{ color: '#2F5BFF' }}>Share</span>
-          </span>
-        </div>
+    <div className="solo">
+      <div className="card solo-card">
+        <Link href="/" className="brand">
+          <div className="mark" />
+          <div className="word">
+            Zero<span>Share</span>
+          </div>
+        </Link>
 
-        {status === 'connecting' && <p style={styles.sub}>Connecting to the sender…</p>}
-        {status === 'connected' && <p style={styles.sub}>Connected. Waiting for the file…</p>}
+        {status === 'connecting' && <p className="sub">Connecting to the sender…</p>}
+        {status === 'connected' && <p className="sub">Connected. Waiting for the file…</p>}
 
         {status === 'receiving' && meta && (
           <>
-            <h1 style={styles.title}>{meta.name}</h1>
-            <p style={styles.sub}>
+            <h1>{meta.name}</h1>
+            <p className="sub">
               {formatSize(received)} / {formatSize(meta.size)} — {progressPct}%
             </p>
+            <div className="progress">
+              <div style={{ width: `${progressPct}%` }} />
+            </div>
           </>
         )}
 
         {status === 'done' && meta && downloadUrl && (
           <>
-            <h1 style={styles.title}>{meta.name}</h1>
-            <p style={styles.sub}>{formatSize(meta.size)} received</p>
-            <a href={downloadUrl} download={meta.name} style={styles.button}>
+            <h1>{meta.name}</h1>
+            <p className="sub">{formatSize(meta.size)} received</p>
+            <a href={downloadUrl} download={meta.name} className="btn primary block">
               Download
             </a>
           </>
@@ -147,60 +151,11 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
 
         {status === 'error' && (
           <>
-            <h1 style={styles.title}>Connection failed</h1>
-            <p style={styles.sub}>{error ?? 'Something went wrong.'}</p>
+            <h1>Connection failed</h1>
+            <p className="sub">{error ?? 'Something went wrong.'}</p>
           </>
         )}
       </div>
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: '#F3F4F1',
-    fontFamily: 'Inter, system-ui, sans-serif',
-    padding: 20,
-  },
-  card: {
-    background: '#fff',
-    border: '1px solid #DFE1DD',
-    borderRadius: 6,
-    padding: '32px 28px',
-    maxWidth: 420,
-    width: '100%',
-  },
-  brand: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 },
-  mark: { width: 22, height: 22, borderRadius: '50%', border: '1.4px solid #14171C' },
-  brandWord: {
-    fontFamily: 'Space Grotesk, system-ui, sans-serif',
-    fontWeight: 700,
-    fontSize: 16,
-    color: '#14171C',
-  },
-  title: {
-    fontFamily: 'Space Grotesk, system-ui, sans-serif',
-    fontSize: 20,
-    fontWeight: 600,
-    color: '#14171C',
-    margin: '0 0 6px',
-    wordBreak: 'break-word',
-  },
-  sub: { color: '#565B63', fontSize: 14, margin: 0 },
-  button: {
-    display: 'inline-block',
-    marginTop: 18,
-    background: '#2F5BFF',
-    color: '#fff',
-    border: 'none',
-    padding: '11px 16px',
-    borderRadius: 3,
-    fontSize: 14,
-    fontWeight: 600,
-    textDecoration: 'none',
-  },
-};

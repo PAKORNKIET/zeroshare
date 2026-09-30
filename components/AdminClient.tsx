@@ -132,30 +132,32 @@ export default function AdminClient() {
           {reports.length === 0 ? (
             <p className="sub" style={{ marginTop: 10 }}>No reports.</p>
           ) : (
-            <table style={{ marginTop: 10 }}>
-              <thead>
-                <tr><th>Target</th><th>Reason</th><th>Status</th><th></th></tr>
-              </thead>
-              <tbody>
-                {reports.map((r) => (
-                  <tr key={r.id}>
-                    <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{r.target_id}</td>
-                    <td>{r.reason}</td>
-                    <td>
-                      <span className={`badge ${r.status === 'Pending' ? 'off' : 'ok'}`}>{r.status}</span>
-                    </td>
-                    <td>
-                      {r.status === 'Pending' && (
-                        <>
-                          <button className="btn ghost sm" onClick={() => updateReport(r.id, 'Reviewed')}>Review</button>{' '}
-                          <button className="btn danger sm" onClick={() => updateReport(r.id, 'Disabled')}>Disable</button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Target</th><th>Reason</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody>
+                  {reports.map((r) => (
+                    <tr key={r.id}>
+                      <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{r.target_id}</td>
+                      <td>{r.reason}</td>
+                      <td>
+                        <span className={`badge ${r.status === 'Pending' ? 'off' : 'ok'}`}>{r.status}</span>
+                      </td>
+                      <td>
+                        {r.status === 'Pending' && (
+                          <>
+                            <button className="btn ghost sm" onClick={() => updateReport(r.id, 'Reviewed')}>Review</button>{' '}
+                            <button className="btn danger sm" onClick={() => updateReport(r.id, 'Disabled')}>Disable</button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </>
       )}
@@ -166,25 +168,27 @@ export default function AdminClient() {
           {ads.length === 0 ? (
             <p className="sub" style={{ marginTop: 10 }}>No advertisements yet.</p>
           ) : (
-            <table style={{ marginTop: 10 }}>
-              <thead>
-                <tr><th>Name</th><th>Type</th><th>Placement</th><th>Status</th><th></th></tr>
-              </thead>
-              <tbody>
-                {ads.map((ad) => (
-                  <tr key={ad.id}>
-                    <td>{ad.name}</td>
-                    <td>{ad.type}</td>
-                    <td>{ad.placement}</td>
-                    <td><span className={`badge ${ad.status === 'ACTIVE' ? 'ok' : 'off'}`}>{ad.status}</span></td>
-                    <td>
-                      <button className="btn ghost sm" onClick={() => toggleAd(ad.id, ad.status)}>Toggle</button>{' '}
-                      <button className="btn danger sm" onClick={() => deleteAd(ad.id)}>Delete</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Name</th><th>Type</th><th>Placement</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody>
+                  {ads.map((ad) => (
+                    <tr key={ad.id}>
+                      <td>{ad.name}</td>
+                      <td>{ad.type}</td>
+                      <td>{ad.placement}</td>
+                      <td><span className={`badge ${ad.status === 'ACTIVE' ? 'ok' : 'off'}`}>{ad.status}</span></td>
+                      <td>
+                        <button className="btn ghost sm" onClick={() => toggleAd(ad.id, ad.status)}>Toggle</button>{' '}
+                        <button className="btn danger sm" onClick={() => deleteAd(ad.id)}>Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
 
           <h2 style={{ marginTop: 22 }}>Add advertisement</h2>
@@ -221,20 +225,22 @@ export default function AdminClient() {
       {tab === 'users' && (
         <>
           <h2>Users</h2>
-          <table style={{ marginTop: 10 }}>
-            <thead>
-              <tr><th>Email</th><th>Role</th><th>Joined</th></tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id}>
-                  <td>{u.email}</td>
-                  <td>{u.role}</td>
-                  <td>{new Date(u.created_at).toLocaleDateString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Email</th><th>Role</th><th>Joined</th></tr>
+              </thead>
+              <tbody>
+                {users.map((u) => (
+                  <tr key={u.id}>
+                    <td>{u.email}</td>
+                    <td>{u.role}</td>
+                    <td>{new Date(u.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
     </div>

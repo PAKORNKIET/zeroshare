@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState, use } from 'react';
 
 type Meta = {
@@ -61,71 +62,67 @@ export default function DownloadPage({
   }
 
   return (
-    <div style={styles.page}>
-      <div style={styles.card}>
-        <div style={styles.brand}>
-          <div style={styles.mark} />
-          <span style={styles.brandWord}>
-            Zero<span style={{ color: '#2F5BFF' }}>Share</span>
-          </span>
-        </div>
+    <div className="solo">
+      <div className="card solo-card">
+        <Link href="/" className="brand">
+          <div className="mark" />
+          <div className="word">
+            Zero<span>Share</span>
+          </div>
+        </Link>
 
         {loadError && (
           <>
-            <h1 style={styles.title}>
+            <h1>
               {loadError === 'This link has expired.'
                 ? 'This link has expired.'
                 : 'This link does not exist.'}
             </h1>
-            <p style={styles.sub}>
+            <p className="sub">
               The file may have been removed, or the link reached its expiry or
               download limit.
             </p>
           </>
         )}
 
-        {!loadError && !meta && <p style={styles.sub}>Loading&hellip;</p>}
+        {!loadError && !meta && <p className="sub">Loading&hellip;</p>}
 
         {meta && !done && (
           <>
-            <h1 style={styles.title}>{meta.file_name}</h1>
-            <p style={styles.sub}>
+            <h1>{meta.file_name}</h1>
+            <p className="sub">
               {formatSize(meta.size)} &middot; {meta.mime_type}
               {meta.one_time ? ' · one-time download' : ''}
             </p>
 
             {meta.password_required && (
-              <div style={{ marginTop: 16 }}>
-                <label style={styles.label}>This file is password protected</label>
+              <>
+                <label>This file is password protected</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter password"
-                  style={styles.input}
                 />
-              </div>
+              </>
             )}
 
             <button
+              className="btn primary block"
               onClick={handleDownload}
               disabled={busy || (meta.password_required && !password)}
-              style={{
-                ...styles.button,
-                opacity: busy || (meta.password_required && !password) ? 0.6 : 1,
-              }}
             >
               {busy ? 'Preparing download…' : 'Download'}
             </button>
 
-            {actionError && <p style={styles.error}>{actionError}</p>}
+            {actionError && <p className="error-text">{actionError}</p>}
           </>
         )}
 
         {done && (
           <>
-            <h1 style={styles.title}>Your download has started</h1>
-            <p style={styles.sub}>
+            <h1>Your download has started</h1>
+            <p className="sub">
               If nothing happened, check your browser&rsquo;s download prompt or
               pop-up blocker.
             </p>
@@ -135,85 +132,3 @@ export default function DownloadPage({
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: '#F3F4F1',
-    fontFamily: 'Inter, system-ui, sans-serif',
-    padding: 20,
-  },
-  card: {
-    background: '#fff',
-    border: '1px solid #DFE1DD',
-    borderRadius: 6,
-    padding: '32px 28px',
-    maxWidth: 420,
-    width: '100%',
-  },
-  brand: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 24,
-  },
-  mark: {
-    width: 22,
-    height: 22,
-    borderRadius: '50%',
-    border: '1.4px solid #14171C',
-  },
-  brandWord: {
-    fontFamily: 'Space Grotesk, system-ui, sans-serif',
-    fontWeight: 700,
-    fontSize: 16,
-    color: '#14171C',
-  },
-  title: {
-    fontFamily: 'Space Grotesk, system-ui, sans-serif',
-    fontSize: 20,
-    fontWeight: 600,
-    color: '#14171C',
-    margin: '0 0 6px',
-    wordBreak: 'break-word',
-  },
-  sub: {
-    color: '#565B63',
-    fontSize: 14,
-    margin: 0,
-  },
-  label: {
-    display: 'block',
-    fontSize: 12.5,
-    fontWeight: 600,
-    color: '#565B63',
-    marginBottom: 6,
-  },
-  input: {
-    width: '100%',
-    padding: '9px 10px',
-    border: '1px solid #DFE1DD',
-    borderRadius: 3,
-    fontSize: 14,
-  },
-  button: {
-    width: '100%',
-    marginTop: 18,
-    background: '#2F5BFF',
-    color: '#fff',
-    border: 'none',
-    padding: '11px 16px',
-    borderRadius: 3,
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-  error: {
-    color: '#B4232B',
-    fontSize: 13,
-    marginTop: 10,
-  },
-};

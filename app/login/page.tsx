@@ -129,7 +129,7 @@ export default function LoginPage() {
         </button>
 
         {error && <p className="error-text">{error}</p>}
-        {message && <p className="sub" style={{ color: '#177A4C' }}>{message}</p>}
+        {message && <p className="sub" style={{ color: 'var(--good)' }}>{message}</p>}
       </div>
     </div>
   );

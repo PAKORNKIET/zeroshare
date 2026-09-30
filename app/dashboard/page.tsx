@@ -94,10 +94,10 @@ export default async function DashboardPage() {
         <h1 className="page-title">Dashboard</h1>
         <p className="sub">Signed in as {user.email}</p>
 
-        <div className="grid3" style={{ marginTop: 12 }}>
+        <div className="grid3">
           <div className="box">
             <div className="stat">
-              <svg className="icon-lg" style={{ color: 'var(--accent)' }}>
+              <svg className="icon-lg">
                 <use href="#i-qr" />
               </svg>
               <div>
@@ -108,7 +108,7 @@ export default async function DashboardPage() {
           </div>
           <div className="box">
             <div className="stat">
-              <svg className="icon-lg" style={{ color: 'var(--accent)' }}>
+              <svg className="icon-lg">
                 <use href="#i-file" />
               </svg>
               <div>
@@ -119,7 +119,7 @@ export default async function DashboardPage() {
           </div>
           <div className="box">
             <div className="stat">
-              <svg className="icon-lg" style={{ color: 'var(--accent)' }}>
+              <svg className="icon-lg">
                 <use href="#i-drop" />
               </svg>
               <div>
@@ -138,35 +138,30 @@ export default async function DashboardPage() {
             Nothing yet. Codes you create while signed in show up here.
           </p>
         ) : (
-          <table style={{ marginTop: 10 }}>
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Type</th>
-                <th>Destination</th>
-                <th>Expires</th>
-              </tr>
-            </thead>
-            <tbody>
-              {qrList.map((qr) => (
-                <tr key={qr.id}>
-                  <td style={{ fontFamily: 'var(--mono)' }}>{qr.short_code}</td>
-                  <td>{qr.type}</td>
-                  <td
-                    style={{
-                      maxWidth: 260,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {qr.destination}
-                  </td>
-                  <td>{formatExpiry(qr.expires_at)}</td>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Type</th>
+                  <th>Destination</th>
+                  <th>Expires</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {qrList.map((qr) => (
+                  <tr key={qr.id}>
+                    <td className="mono">{qr.short_code}</td>
+                    <td>{qr.type}</td>
+                    <td className="truncate">
+                      {qr.destination}
+                    </td>
+                    <td>{formatExpiry(qr.expires_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -177,38 +172,33 @@ export default async function DashboardPage() {
             Nothing yet. Files you share while signed in show up here.
           </p>
         ) : (
-          <table style={{ marginTop: 10 }}>
-            <thead>
-              <tr>
-                <th>File</th>
-                <th>Size</th>
-                <th>Downloads</th>
-                <th>Expires</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fileList.map((f) => (
-                <tr key={f.id}>
-                  <td
-                    style={{
-                      maxWidth: 260,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {f.name}
-                  </td>
-                  <td>{formatSize(f.size)}</td>
-                  <td>
-                    {f.download_count ?? 0}
-                    {f.download_limit ? ` / ${f.download_limit}` : ''}
-                  </td>
-                  <td>{formatExpiry(f.expires_at)}</td>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>File</th>
+                  <th>Size</th>
+                  <th>Downloads</th>
+                  <th>Expires</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {fileList.map((f) => (
+                  <tr key={f.id}>
+                    <td className="truncate">
+                      {f.name}
+                    </td>
+                    <td>{formatSize(f.size)}</td>
+                    <td>
+                      {f.download_count ?? 0}
+                      {f.download_limit ? ` / ${f.download_limit}` : ''}
+                    </td>
+                    <td>{formatExpiry(f.expires_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
