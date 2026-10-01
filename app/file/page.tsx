@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, use } from 'react';
 import QRCode from 'qrcode';
 import AdSlot from '@/components/AdSlot';
+import FilePicker from '@/components/FilePicker';
+import { useI18n } from '@/components/I18nProvider';
+import { dateLocale, type MessageKey } from '@/lib/i18n';
 import { createPeerConnection, getSignalingChannel, CHUNK_SIZE } from '@/lib/webrtc';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -17,14 +20,18 @@ type UploadResult = {
   max_downloads: number | null;
 };
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+const EXPIRY_OPTIONS = ['1h', '6h', '12h', '24h', '3d', '7d', '30d'] as const;
 
-export default function FilePage() {
-  const [mode, setMode] = useState<'live' | 'link'>('link');
+export default function FilePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mode?: string | string[] }>;
+}) {
+  const { t, locale } = useI18n();
+  // /file?mode=live is the "Direct send" shortcut from the home page and the
+  // installed app's shortcut menu.
+  const { mode: modeParam } = use(searchParams);
+  const [mode, setMode] = useState<'live' | 'link'>(modeParam === 'live' ? 'live' : 'link');
 
   // --- Live P2P state ---
   const [liveFile, setLiveFile] = useState<File | null>(null);
@@ -50,28 +57,45 @@ export default function FilePage() {
 
   async function sendFileOverChannel(dc: RTCDataChannel, f: File) {
     dc.send(JSON.stringify({ name: f.name, size: f.size, type: f.type }));
-    const buffer = await f.arrayBuffer();
-    let offset = 0;
+
+    // Resume sending once the buffer has drained to this level, rather than
+    // waiting for it to empty completely (the default threshold is 0).
+    dc.bufferedAmountLowThreshold = CHUNK_SIZE * 4;
+
+    const reader = f.stream().getReader();
+    let sent = 0;
     setLiveStatus('sending');
-    while (offset < buffer.byteLength) {
-      const chunk = buffer.slice(offset, offset + CHUNK_SIZE);
-      dc.send(chunk);
-      offset += CHUNK_SIZE;
-      setLiveProgress(Math.min(100, Math.round((offset / buffer.byteLength) * 100)));
-      // Yield so we don't flood the data channel's internal buffer.
-      if (dc.bufferedAmount > CHUNK_SIZE * 8) {
-        await new Promise<void>((resolve) => {
-          dc.onbufferedamountlow = () => resolve();
-        });
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      // value is a Uint8Array chunk straight from disk — never the whole file.
+      let offset = 0;
+      while (offset < value.byteLength) {
+        const slice = value.slice(offset, offset + CHUNK_SIZE);
+        dc.send(slice);
+        offset += CHUNK_SIZE;
+        sent += slice.byteLength;
+
+        // Yield so we don't flood the data channel's internal buffer.
+        if (dc.bufferedAmount > CHUNK_SIZE * 8) {
+          await new Promise<void>((resolve) => {
+            dc.onbufferedamountlow = () => resolve();
+          });
+        }
       }
+
+      setLiveProgress(Math.min(100, Math.round((sent / f.size) * 100)));
     }
+
     dc.send('EOF');
     setLiveStatus('sent');
   }
 
   async function createRoom() {
     if (!liveFile) {
-      setLiveError('Choose a file first');
+      setLiveError(t('common.chooseFile'));
       return;
     }
     setLiveError(null);
@@ -172,7 +196,7 @@ export default function FilePage() {
   async function handleUpload() {
     setError(null);
     if (!file) {
-      setError('Choose at least one file');
+      setError(t('common.chooseFile'));
       return;
     }
 
@@ -194,7 +218,7 @@ export default function FilePage() {
         }),
       });
       const presignBody = await presignRes.json();
-      if (!presignRes.ok) throw new Error(presignBody.error || 'Could not start the upload.');
+      if (!presignRes.ok) throw new Error(presignBody.error || t('err.startUpload'));
 
       // Step 2 — upload the file bytes straight to R2, bypassing our
       // server (and its request-size limit) entirely.
@@ -203,7 +227,7 @@ export default function FilePage() {
         headers: { 'Content-Type': file.type || 'application/octet-stream' },
         body: file,
       });
-      if (!uploadRes.ok) throw new Error('Upload to storage failed.');
+      if (!uploadRes.ok) throw new Error(t('err.storageUpload'));
 
       setResult(presignBody);
       const dataUrl = await QRCode.toDataURL(presignBody.url, { width: 160, margin: 1 });
@@ -215,14 +239,19 @@ export default function FilePage() {
     }
   }
 
+  const liveMessage: Record<string, string> = {
+    waiting: t('direct.waiting'),
+    connected: t('direct.connected'),
+    sending: t('direct.sending', { pct: liveProgress }),
+    sent: t('direct.sent'),
+    error: liveError ?? t('common.somethingWrong'),
+  };
+
   return (
     <div>
       <div className="card">
-        <h1 className="page-title">File sharing</h1>
-        <p className="sub">
-          Send directly to one recipient, or generate a temporary link anyone
-          can open.
-        </p>
+        <h1 className="page-title">{t('file.title')}</h1>
+        <p className="sub">{t('file.sub')}</p>
 
         <div className="tabs">
           <button
@@ -230,18 +259,18 @@ export default function FilePage() {
             onClick={() => setMode('live')}
           >
             <svg className="icon">
-              <use href="#i-link" />
+              <use href="#i-send" />
             </svg>
-            Live P2P
+            {t('file.tab.direct')}
           </button>
           <button
             className={`tabbtn ${mode === 'link' ? 'active' : ''}`}
             onClick={() => setMode('link')}
           >
             <svg className="icon">
-              <use href="#i-clock" />
+              <use href="#i-link" />
             </svg>
-            Temporary link
+            {t('file.tab.link')}
           </button>
         </div>
 
@@ -249,50 +278,49 @@ export default function FilePage() {
           <>
             {liveStatus === 'idle' && (
               <>
-                <label>File to send</label>
-                <input
-                  type="file"
-                  onChange={(e) => setLiveFile(e.target.files?.[0] ?? null)}
-                />
-                {liveFile && (
-                  <ul className="filelist">
-                    <li>
-                      <span>{liveFile.name}</span>
-                      <span>{formatSize(liveFile.size)}</span>
-                    </li>
-                  </ul>
-                )}
-                <p className="sub" style={{ marginTop: 10 }}>
-                  Opens a live room. The file transfers directly to whoever
-                  scans the code — nothing is stored on our servers.
-                </p>
+                <div className="explainer">
+                  <div className="explainer-title">
+                    <svg className="icon">
+                      <use href="#i-info" />
+                    </svg>
+                    {t('direct.howTitle')}
+                  </div>
+                  <ol>
+                    <li>{t('direct.step1')}</li>
+                    <li>{t('direct.step2')}</li>
+                    <li>{t('direct.step3')}</li>
+                  </ol>
+                  <p>{t('direct.keepOpen')}</p>
+                </div>
+
+                <label>{t('direct.fileLabel')}</label>
+                <FilePicker file={liveFile} onChange={setLiveFile} />
                 <button className="btn primary" onClick={createRoom}>
                   <svg className="icon">
                     <use href="#i-plus" />
                   </svg>
-                  Create room
+                  {t('direct.create')}
                 </button>
                 {liveError && <p className="error-text">{liveError}</p>}
               </>
             )}
 
             {liveStatus !== 'idle' && roomCode && (
-              <div className="qrbox" style={{ marginTop: 4 }}>
+              <div className="qrbox">
                 {roomQr && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={roomQr} alt="Room QR code" />
+                  <img src={roomQr} alt={t('direct.roomQrAlt')} />
                 )}
                 <div className="meta">
                   <b>{typeof window !== 'undefined' ? `${window.location.origin}/room/${roomCode}` : ''}</b>
-                  <p className="sub" style={{ margin: '8px 0 0' }}>
-                    {liveStatus === 'waiting' && 'Waiting for someone to open this link…'}
-                    {liveStatus === 'connected' && 'Connected — starting transfer…'}
-                    {liveStatus === 'sending' && `Sending… ${liveProgress}%`}
-                    {liveStatus === 'sent' && 'Transfer complete.'}
-                    {liveStatus === 'error' && (liveError ?? 'Something went wrong.')}
-                  </p>
-                  <button className="btn ghost sm" style={{ marginTop: 10 }} onClick={resetRoom}>
-                    Close room
+                  <p className="sub tight">{liveMessage[liveStatus]}</p>
+                  {(liveStatus === 'sending' || liveStatus === 'sent') && (
+                    <div className="progress">
+                      <div style={{ width: `${liveProgress}%` }} />
+                    </div>
+                  )}
+                  <button className="btn ghost sm" onClick={resetRoom}>
+                    {t('direct.close')}
                   </button>
                 </div>
               </div>
@@ -302,39 +330,26 @@ export default function FilePage() {
 
         {mode === 'link' && (
           <>
-            <label>File</label>
-            <input
-              type="file"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
-            {file && (
-              <ul className="filelist">
-                <li>
-                  <span>{file.name}</span>
-                  <span>{formatSize(file.size)}</span>
-                </li>
-              </ul>
-            )}
+            <label>{t('link.file')}</label>
+            <FilePicker file={file} onChange={setFile} />
 
             <div className="row">
               <div className="col">
-                <label>Link expires</label>
+                <label>{t('link.expires')}</label>
                 <select value={expiry} onChange={(e) => setExpiry(e.target.value)}>
-                  <option value="1h">1 hour</option>
-                  <option value="6h">6 hours</option>
-                  <option value="12h">12 hours</option>
-                  <option value="24h">24 hours</option>
-                  <option value="3d">3 days</option>
-                  <option value="7d">7 days</option>
-                  <option value="30d">30 days</option>
+                  {EXPIRY_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {t(`exp.${opt}` as MessageKey)}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="col">
-                <label>Download limit</label>
+                <label>{t('link.limit')}</label>
                 <input
                   type="number"
                   min={1}
-                  placeholder="Unlimited"
+                  placeholder={t('link.unlimited')}
                   value={downloadLimit}
                   onChange={(e) => setDownloadLimit(e.target.value)}
                 />
@@ -347,12 +362,12 @@ export default function FilePage() {
                 checked={passwordEnabled}
                 onChange={(e) => setPasswordEnabled(e.target.checked)}
               />
-              Require a password
+              {t('link.requirePassword')}
             </label>
             {passwordEnabled && (
               <input
                 type="password"
-                placeholder="Password"
+                placeholder={t('link.password')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -364,41 +379,42 @@ export default function FilePage() {
                 checked={oneTime}
                 onChange={(e) => setOneTime(e.target.checked)}
               />
-              One-time download — link dies after the first open
+              {t('link.oneTime')}
             </label>
 
             <button className="btn primary" onClick={handleUpload} disabled={busy}>
               <svg className="icon">
                 <use href="#i-link" />
               </svg>
-              {busy ? 'Uploading…' : 'Generate link + QR'}
+              {busy ? t('common.uploading') : t('link.generate')}
             </button>
 
             {error && <p className="error-text">{error}</p>}
 
             {result && qrImage && (
-              <div className="qrbox" style={{ marginTop: 18 }}>
+              <div className="qrbox">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={qrImage} alt="QR code" />
+                <img src={qrImage} alt={t('common.qrAlt')} />
                 <div className="meta">
                   <b>{result.url}</b>
-                  <p className="sub" style={{ margin: '6px 0 0' }}>
+                  <p className="sub tight">
                     {result.expires_at
-                      ? `Expires ${new Date(result.expires_at).toLocaleString()}`
-                      : 'Permanent'}
-                    {result.max_downloads ? ` · capped at ${result.max_downloads} downloads` : ''}
-                    {result.password_protected ? ' · password protected' : ''}
-                    {result.one_time ? ' · one-time download' : ''}
+                      ? t('common.expires', {
+                          date: new Date(result.expires_at).toLocaleString(dateLocale(locale)),
+                        })
+                      : t('common.permanent')}
+                    {result.max_downloads ? t('link.cappedAt', { n: result.max_downloads }) : ''}
+                    {result.password_protected ? t('link.passwordTag') : ''}
+                    {result.one_time ? t('common.oneTimeTag') : ''}
                   </p>
                   <button
                     className="btn ghost sm"
-                    style={{ marginTop: 10 }}
                     onClick={() => navigator.clipboard.writeText(result.url)}
                   >
                     <svg className="icon">
                       <use href="#i-copy" />
                     </svg>
-                    Copy link
+                    {t('common.copyLink')}
                   </button>
                 </div>
               </div>

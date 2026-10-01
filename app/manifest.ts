@@ -10,8 +10,8 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: '/',
     display: 'standalone',
     orientation: 'any',
-    background_color: '#EEF5F3',
-    theme_color: '#EEF5F3',
+    background_color: '#F5F6F4',
+    theme_color: '#F5F6F4',
     categories: ['productivity', 'utilities'],
     icons: [
       { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
@@ -19,6 +19,7 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: '/icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
     shortcuts: [
+      { name: 'Direct send', url: '/file?mode=live', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
       { name: 'Quick Drop', url: '/quick', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
       { name: 'Share a file', url: '/file', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
       { name: 'Create a QR code', url: '/qr', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },

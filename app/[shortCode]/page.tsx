@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import Mascot from '@/components/Mascot';
+import { getT } from '@/lib/i18n-server';
 
 export default async function ShortCodePage({
   params,
@@ -19,14 +20,13 @@ export default async function ShortCodePage({
   const expired = qr?.expires_at && new Date(qr.expires_at) < new Date();
 
   if (!qr || expired) {
+    const t = await getT();
     return (
       <div className="solo">
         <div className="card solo-card">
-          <Mascot mood="sad" size={112} />
-          <h1>{expired ? 'This code has expired.' : 'This code does not exist.'}</h1>
-          <p className="sub">
-            The QR code may have been removed, or reached its expiry date.
-          </p>
+          <Mascot mood="sad" size={88} />
+          <h1>{expired ? t('qr.codeExpired') : t('qr.codeMissing')}</h1>
+          <p className="sub">{t('qr.goneSub')}</p>
         </div>
       </div>
     );

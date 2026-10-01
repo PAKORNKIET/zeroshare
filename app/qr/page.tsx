@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import QRCode from 'qrcode';
 import AdSlot from '@/components/AdSlot';
+import { useI18n } from '@/components/I18nProvider';
+import { dateLocale, type MessageKey } from '@/lib/i18n';
 
 type QrType = 'url' | 'file' | 'dynamic';
 
@@ -14,12 +16,12 @@ type QrResult = {
   expires_at: string | null;
 };
 
-function expiryLabel(val: string | null): string {
-  if (!val) return 'Permanent';
-  return `Expires ${new Date(val).toLocaleString()}`;
-}
+const EXPIRY_OPTIONS = ['permanent', '1h', '6h', '12h', '24h', '3d', '7d', '30d', 'custom'] as const;
 
 export default function QrPage() {
+  const { t, locale } = useI18n();
+  const expiryLabel = (val: string | null) =>
+    val ? t('common.expires', { date: new Date(val).toLocaleString(dateLocale(locale)) }) : t('common.permanent');
   const [qrType, setQrType] = useState<QrType>('url');
   const [destination, setDestination] = useState('');
   const [expiry, setExpiry] = useState('24h');
@@ -32,7 +34,7 @@ export default function QrPage() {
   async function handleGenerate() {
     setError(null);
     if (!destination.trim()) {
-      setError('Enter a destination first');
+      setError(t('qr.enterDestination'));
       return;
     }
 
@@ -49,7 +51,7 @@ export default function QrPage() {
         }),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || 'Could not generate the QR code.');
+      if (!res.ok) throw new Error(body.error || t('qr.failed'));
 
       setResult(body);
       const dataUrl = await QRCode.toDataURL(body.short_url, { width: 160, margin: 1 });
@@ -64,35 +66,29 @@ export default function QrPage() {
   return (
     <div>
       <div className="card">
-        <h1 className="page-title">QR generator</h1>
-        <p className="sub">
-          Turn a link, a file, or a destination you can update later into a
-          scannable code.
-        </p>
+        <h1 className="page-title">{t('qr.title')}</h1>
+        <p className="sub">{t('qr.sub')}</p>
 
         <div className="tabs">
-          {(['url', 'file', 'dynamic'] as QrType[]).map((t) => (
+          {(['url', 'file', 'dynamic'] as QrType[]).map((type) => (
             <button
-              key={t}
-              className={`tabbtn ${qrType === t ? 'active' : ''}`}
-              onClick={() => setQrType(t)}
+              key={type}
+              className={`tabbtn ${qrType === type ? 'active' : ''}`}
+              onClick={() => setQrType(type)}
             >
               <svg className="icon">
-                <use href={`#${t === 'url' ? 'i-link' : t === 'file' ? 'i-file' : 'i-qr'}`} />
+                <use href={`#${type === 'url' ? 'i-link' : type === 'file' ? 'i-file' : 'i-qr'}`} />
               </svg>
-              {t === 'url' ? 'URL' : t === 'file' ? 'File' : 'Dynamic'}
+              {t(`qr.type.${type}` as MessageKey)}
             </button>
           ))}
         </div>
 
         {qrType === 'dynamic' && (
-          <small className="note" style={{ marginBottom: 8 }}>
-            The printed code always points to the same short URL — change the
-            destination anytime without reprinting.
-          </small>
+          <small className="note">{t('qr.dynamicNote')}</small>
         )}
 
-        <label>{qrType === 'file' ? 'File name or reference' : 'Destination'}</label>
+        <label>{qrType === 'file' ? t('qr.fileRef') : t('qr.destination')}</label>
         <input
           type="text"
           value={destination}
@@ -100,22 +96,18 @@ export default function QrPage() {
           placeholder={qrType === 'url' ? 'https://example.com' : 'https://...'}
         />
 
-        <label>Expires</label>
+        <label>{t('qr.expires')}</label>
         <select value={expiry} onChange={(e) => setExpiry(e.target.value)}>
-          <option value="permanent">Permanent</option>
-          <option value="1h">1 hour</option>
-          <option value="6h">6 hours</option>
-          <option value="12h">12 hours</option>
-          <option value="24h">24 hours</option>
-          <option value="3d">3 days</option>
-          <option value="7d">7 days</option>
-          <option value="30d">30 days</option>
-          <option value="custom">Custom date</option>
+          {EXPIRY_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>
+              {t(`exp.${opt}` as MessageKey)}
+            </option>
+          ))}
         </select>
 
         {expiry === 'custom' && (
           <>
-            <label>Expiry date</label>
+            <label>{t('qr.expiryDate')}</label>
             <input
               type="date"
               value={customExpiresAt}
@@ -128,29 +120,28 @@ export default function QrPage() {
           <svg className="icon">
             <use href="#i-qr" />
           </svg>
-          {busy ? 'Generating…' : 'Generate QR'}
+          {busy ? t('qr.generating') : t('qr.generate')}
         </button>
 
         {error && <p className="error-text">{error}</p>}
 
         {result && qrImage && (
-          <div className="qrbox" style={{ marginTop: 18 }}>
+          <div className="qrbox">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qrImage} alt="QR code" />
+            <img src={qrImage} alt={t('common.qrAlt')} />
             <div className="meta">
               <b>{result.short_url}</b>
-              <p className="sub" style={{ margin: '6px 0 0' }}>
+              <p className="sub tight">
                 {expiryLabel(result.expires_at)}
               </p>
               <button
                 className="btn ghost sm"
-                style={{ marginTop: 10 }}
                 onClick={() => navigator.clipboard.writeText(result.short_url)}
               >
                 <svg className="icon">
                   <use href="#i-copy" />
                 </svg>
-                Copy link
+                {t('common.copyLink')}
               </button>
             </div>
           </div>

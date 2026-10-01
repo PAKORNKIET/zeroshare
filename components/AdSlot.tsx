@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useI18n } from '@/components/I18nProvider';
 
 type Ad = {
   id: string;
@@ -11,6 +12,7 @@ type Ad = {
 };
 
 export default function AdSlot({ placement }: { placement: string }) {
+  const { t } = useI18n();
   const [ad, setAd] = useState<Ad | null>(null);
   const [checked, setChecked] = useState(false);
 
@@ -30,7 +32,7 @@ export default function AdSlot({ placement }: { placement: string }) {
         <svg className="icon">
           <use href="#i-mega" />
         </svg>
-        Advertisement space — {placement}
+        {t('ad.placeholder', { placement })}
       </div>
     );
   }

@@ -2,25 +2,28 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import Mascot from '@/components/Mascot';
+import { useI18n } from '@/components/I18nProvider';
+import { LanguageSwitch, ThemeToggle } from '@/components/Preferences';
+import type { MessageKey } from '@/lib/i18n';
 
-const navItems = [
-  { href: '/', label: 'Home', short: 'Home', icon: 'i-home' },
-  { href: '/qr', label: 'QR generator', short: 'QR', icon: 'i-qr' },
-  { href: '/file', label: 'File share', short: 'Files', icon: 'i-file' },
-  { href: '/quick', label: 'Quick Drop', short: 'Drop', icon: 'i-drop' },
-  { href: '/dashboard', label: 'Dashboard', short: 'Mine', icon: 'i-grid' },
-  { href: '/login', label: 'Account', short: 'Account', icon: 'i-users' },
+const navItems: { href: string; label: MessageKey; short: MessageKey; icon: string }[] = [
+  { href: '/', label: 'nav.home', short: 'tab.home', icon: 'i-home' },
+  { href: '/qr', label: 'nav.qr', short: 'tab.qr', icon: 'i-qr' },
+  { href: '/file', label: 'nav.file', short: 'tab.file', icon: 'i-file' },
+  { href: '/quick', label: 'nav.quick', short: 'tab.quick', icon: 'i-drop' },
+  { href: '/dashboard', label: 'nav.dashboard', short: 'tab.dashboard', icon: 'i-grid' },
+  { href: '/login', label: 'nav.account', short: 'nav.account', icon: 'i-users' },
 ];
 
 // On phones the five main destinations live in the bottom tab bar; account
 // moves up into the top bar.
 const tabItems = navItems.filter((i) => i.href !== '/login');
-const topItems = navItems.filter((i) => i.href === '/login');
+const accountItem = navItems.find((i) => i.href === '/login')!;
 
 function Brand() {
+  const { t } = useI18n();
   return (
-    <Link href="/" className="brand" aria-label="Zero Share home">
+    <Link href="/" className="brand" aria-label={t('brand.home')}>
       <div className="mark" />
       <div className="word">
         Zero<span>Share</span>
@@ -29,8 +32,9 @@ function Brand() {
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ serverTheme }: { serverTheme: 'light' | 'dark' | null }) {
   const pathname = usePathname();
+  const { t } = useI18n();
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
 
@@ -44,41 +48,45 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              title={item.label}
+              title={t(item.label)}
               className={isActive(item.href) ? 'active' : ''}
             >
               <svg className="icon">
                 <use href={`#${item.icon}`} />
               </svg>
-              <span>{item.label}</span>
+              <span>{t(item.label)}</span>
             </Link>
           ))}
         </nav>
 
-        <div className="side-card">
-          <Mascot size={76} />
-          <b>Nothing sticks around</b>
-          <span>Links and files clean themselves up when they expire.</span>
+        <div className="prefs">
+          <div className="prefs-full">
+            <LanguageSwitch variant="segmented" />
+            <ThemeToggle variant="row" serverTheme={serverTheme} />
+          </div>
+          <div className="prefs-compact">
+            <LanguageSwitch variant="icon" />
+            <ThemeToggle variant="icon" serverTheme={serverTheme} />
+          </div>
         </div>
 
-        <div className="side-footer">About &middot; Privacy &middot; Terms &middot; Contact</div>
+        <div className="side-footer">{t('footer.links')}</div>
       </aside>
 
       <header className="topbar">
         <Brand />
         <div className="topbar-actions">
-          {topItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-label={item.label}
-              className={`icon-btn ${isActive(item.href) ? 'active' : ''}`}
-            >
-              <svg className="icon">
-                <use href={`#${item.icon}`} />
-              </svg>
-            </Link>
-          ))}
+          <LanguageSwitch variant="icon" />
+          <ThemeToggle variant="icon" serverTheme={serverTheme} />
+          <Link
+            href={accountItem.href}
+            aria-label={t(accountItem.label)}
+            className={`icon-btn ${isActive(accountItem.href) ? 'active' : ''}`}
+          >
+            <svg className="icon">
+              <use href={`#${accountItem.icon}`} />
+            </svg>
+          </Link>
         </div>
       </header>
 
@@ -92,7 +100,7 @@ export default function Sidebar() {
             <svg className="icon">
               <use href={`#${item.icon}`} />
             </svg>
-            <span>{item.short}</span>
+            <span>{t(item.short)}</span>
           </Link>
         ))}
       </nav>

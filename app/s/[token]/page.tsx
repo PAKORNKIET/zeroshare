@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from 'react';
 import Mascot from '@/components/Mascot';
+import { useI18n } from '@/components/I18nProvider';
 
 type Meta = {
   file_name: string;
@@ -23,6 +24,7 @@ export default function DownloadPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = use(params);
+  const { t } = useI18n();
 
   const [meta, setMeta] = useState<Meta | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export default function DownloadPage({
         body: JSON.stringify(password ? { password } : {}),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || 'Could not start the download.');
+      if (!res.ok) throw new Error(body.error || t('dl.failed'));
       window.location.href = body.download_url;
       setDone(true);
     } catch (err) {
@@ -64,40 +66,34 @@ export default function DownloadPage({
   return (
     <div className="solo">
       <div className="card solo-card">
-        <Mascot mood={loadError ? 'sad' : meta ? 'happy' : 'wait'} size={112} />
+        <Mascot mood={loadError ? 'sad' : meta ? 'happy' : 'wait'} size={88} />
 
         {loadError && (
           <>
-            <h1>
-              {loadError === 'This link has expired.'
-                ? 'This link has expired.'
-                : 'This link does not exist.'}
-            </h1>
-            <p className="sub">
-              The file may have been removed, or the link reached its expiry or
-              download limit.
-            </p>
+            {/* The API reports expiry with this exact English message. */}
+            <h1>{loadError === 'This link has expired.' ? t('dl.expired') : t('dl.missing')}</h1>
+            <p className="sub">{t('dl.goneSub')}</p>
           </>
         )}
 
-        {!loadError && !meta && <p className="sub">Loading&hellip;</p>}
+        {!loadError && !meta && <p className="sub">{t('common.loading')}</p>}
 
         {meta && !done && (
           <>
             <h1>{meta.file_name}</h1>
             <p className="sub">
               {formatSize(meta.size)} &middot; {meta.mime_type}
-              {meta.one_time ? ' · one-time download' : ''}
+              {meta.one_time ? t('common.oneTimeTag') : ''}
             </p>
 
             {meta.password_required && (
               <>
-                <label>This file is password protected</label>
+                <label>{t('dl.passwordRequired')}</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
+                  placeholder={t('dl.passwordPlaceholder')}
                 />
               </>
             )}
@@ -107,7 +103,7 @@ export default function DownloadPage({
               onClick={handleDownload}
               disabled={busy || (meta.password_required && !password)}
             >
-              {busy ? 'Preparing download…' : 'Download'}
+              {busy ? t('dl.preparing') : t('common.download')}
             </button>
 
             {actionError && <p className="error-text">{actionError}</p>}
@@ -116,11 +112,8 @@ export default function DownloadPage({
 
         {done && (
           <>
-            <h1>Your download has started</h1>
-            <p className="sub">
-              If nothing happened, check your browser&rsquo;s download prompt or
-              pop-up blocker.
-            </p>
+            <h1>{t('dl.started')}</h1>
+            <p className="sub">{t('dl.startedSub')}</p>
           </>
         )}
       </div>

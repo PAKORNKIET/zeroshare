@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, use } from 'react';
 import { createPeerConnection, getSignalingChannel, JOIN_RETRY_MS } from '@/lib/webrtc';
 import Mascot from '@/components/Mascot';
+import { useI18n } from '@/components/I18nProvider';
 
 type Status = 'connecting' | 'connected' | 'receiving' | 'done' | 'error';
 
@@ -14,6 +15,7 @@ function formatSize(bytes: number): string {
 
 export default function RoomPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params);
+  const { t } = useI18n();
 
   const [status, setStatus] = useState<Status>('connecting');
   const [error, setError] = useState<string | null>(null);
@@ -119,11 +121,14 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
       <div className="card solo-card">
         <Mascot
           mood={status === 'error' ? 'sad' : status === 'done' ? 'happy' : 'wait'}
-          size={112}
+          size={88}
         />
 
-        {status === 'connecting' && <p className="sub">Connecting to the sender…</p>}
-        {status === 'connected' && <p className="sub">Connected. Waiting for the file…</p>}
+        {status === 'connecting' && <h1>{t('room.connecting')}</h1>}
+        {status === 'connected' && <h1>{t('room.connected')}</h1>}
+        {(status === 'connecting' || status === 'connected') && (
+          <p className="sub">{t('room.keepOpen')}</p>
+        )}
 
         {status === 'receiving' && meta && (
           <>
@@ -140,17 +145,17 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
         {status === 'done' && meta && downloadUrl && (
           <>
             <h1>{meta.name}</h1>
-            <p className="sub">{formatSize(meta.size)} received</p>
+            <p className="sub">{t('room.received', { size: formatSize(meta.size) })}</p>
             <a href={downloadUrl} download={meta.name} className="btn primary block">
-              Download
+              {t('common.download')}
             </a>
           </>
         )}
 
         {status === 'error' && (
           <>
-            <h1>Connection failed</h1>
-            <p className="sub">{error ?? 'Something went wrong.'}</p>
+            <h1>{t('room.failed')}</h1>
+            <p className="sub">{error ?? t('common.somethingWrong')}</p>
           </>
         )}
       </div>

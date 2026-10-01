@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import QRCode from 'qrcode';
+import { useI18n } from '@/components/I18nProvider';
 
 type UploadResult = {
   token: string;
@@ -16,6 +17,7 @@ function formatSize(bytes: number): string {
 }
 
 export default function QuickDropPage() {
+  const { t } = useI18n();
   const [dragOver, setDragOver] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -40,14 +42,14 @@ export default function QuickDropPage() {
         }),
       });
       const presignBody = await presignRes.json();
-      if (!presignRes.ok) throw new Error(presignBody.error || 'Could not start the upload.');
+      if (!presignRes.ok) throw new Error(presignBody.error || t('err.startUpload'));
 
       const uploadRes = await fetch(presignBody.uploadUrl, {
         method: 'PUT',
         headers: { 'Content-Type': f.type || 'application/octet-stream' },
         body: f,
       });
-      if (!uploadRes.ok) throw new Error('Upload to storage failed.');
+      if (!uploadRes.ok) throw new Error(t('err.storageUpload'));
 
       setResult(presignBody);
       const dataUrl = await QRCode.toDataURL(presignBody.url, { width: 160, margin: 1 });
@@ -62,8 +64,8 @@ export default function QuickDropPage() {
   return (
     <div>
       <div className="card">
-        <h1 className="page-title">Quick Drop</h1>
-        <p className="sub">The fastest path from file to link. Drop it, get a code, done.</p>
+        <h1 className="page-title">{t('quick.title')}</h1>
+        <p className="sub">{t('quick.sub')}</p>
 
         <div
           className={`drop ${dragOver ? 'over' : ''}`}
@@ -82,14 +84,14 @@ export default function QuickDropPage() {
           <svg className="icon-lg">
             <use href="#i-drop" />
           </svg>
-          <div>Drag a file here</div>
+          <div>{t('quick.drag')}</div>
           <button className="btn ghost" onClick={() => inputRef.current?.click()}>
-            Select file
+            {t('quick.select')}
           </button>
           <input
             ref={inputRef}
             type="file"
-            style={{ display: 'none' }}
+            hidden
             onChange={(e) => {
               const picked = e.target.files?.[0];
               if (picked) upload(picked);
@@ -106,27 +108,24 @@ export default function QuickDropPage() {
           </ul>
         )}
 
-        {busy && <p className="sub">Uploading…</p>}
+        {busy && <p className="sub">{t('common.uploading')}</p>}
         {error && <p className="error-text">{error}</p>}
 
         {result && qrImage && (
-          <div className="qrbox" style={{ marginTop: 18 }}>
+          <div className="qrbox">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qrImage} alt="QR code" />
+            <img src={qrImage} alt={t('common.qrAlt')} />
             <div className="meta">
-              <p className="sub" style={{ margin: '0 0 6px' }}>
-                Scan to download
-              </p>
+              <p className="sub tight">{t('quick.scan')}</p>
               <b>{result.url}</b>
               <button
                 className="btn ghost sm"
-                style={{ marginTop: 10 }}
                 onClick={() => navigator.clipboard.writeText(result.url)}
               >
                 <svg className="icon">
                   <use href="#i-copy" />
                 </svg>
-                Copy link
+                {t('common.copyLink')}
               </button>
             </div>
           </div>

@@ -1,88 +1,40 @@
 import Link from 'next/link';
 import AdSlot from '@/components/AdSlot';
-import Mascot from '@/components/Mascot';
+import { getT } from '@/lib/i18n-server';
+import type { MessageKey } from '@/lib/i18n';
 
-const tools = [
-  {
-    href: '/quick',
-    title: 'Quick Drop',
-    blurb: 'Drop a file, get a link and QR in seconds.',
-    icon: 'i-drop',
-    tone: 'mint',
-  },
-  {
-    href: '/file',
-    title: 'File share',
-    blurb: 'Send live to one device, or make a temporary link.',
-    icon: 'i-file',
-    tone: 'peach',
-  },
-  {
-    href: '/qr',
-    title: 'QR generator',
-    blurb: 'Turn any link or text into a scannable code.',
-    icon: 'i-qr',
-    tone: 'lilac',
-  },
-  {
-    href: '/dashboard',
-    title: 'Dashboard',
-    blurb: 'Everything you have shared while signed in.',
-    icon: 'i-grid',
-    tone: 'sky',
-  },
+const actions: { href: string; title: MessageKey; desc: MessageKey; icon: string; tint: number }[] = [
+  { href: '/quick', title: 'home.quick.title', desc: 'home.quick.desc', icon: 'i-drop', tint: 1 },
+  { href: '/file?mode=live', title: 'home.direct.title', desc: 'home.direct.desc', icon: 'i-send', tint: 2 },
+  { href: '/file', title: 'home.link.title', desc: 'home.link.desc', icon: 'i-link', tint: 3 },
+  { href: '/qr', title: 'home.qr.title', desc: 'home.qr.desc', icon: 'i-qr', tint: 4 },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const t = await getT();
+
   return (
     <div>
-      <div className="card hero">
-        <Mascot className="hero-mascot" size={210} />
-        <div className="hero-copy">
-          <div className="eyebrow">
-            <svg className="icon">
-              <use href="#i-link" />
-            </svg>
-            No account required
-          </div>
-          <h1>Move files without the setup.</h1>
-          <p className="sub">
-            Generate a QR code, share a link, or drop a file — anything you send
-            here disappears on its own.
-          </p>
-          <div className="cta-row">
-            <Link href="/quick" className="btn light">
-              <svg className="icon">
-                <use href="#i-drop" />
-              </svg>
-              Start a Quick Drop
-            </Link>
-            <Link href="/qr" className="btn glass">
-              <svg className="icon">
-                <use href="#i-qr" />
-              </svg>
-              Create a QR code
-            </Link>
-          </div>
-        </div>
+      <div className="page-head">
+        <h1 className="page-title">{t('home.title')}</h1>
+        <p className="sub">{t('home.sub')}</p>
       </div>
 
-      <div className="section-head">
-        <h2>Tools</h2>
-      </div>
-      <div className="tiles">
-        {tools.map((t) => (
-          <Link key={t.href} href={t.href} className={`tile ${t.tone}`}>
-            <div className="tile-icon">
+      <div className="actions">
+        {actions.map((a) => (
+          <Link key={a.href} href={a.href} className="action">
+            <span className={`action-icon tint-${a.tint}`}>
               <svg className="icon">
-                <use href={`#${t.icon}`} />
+                <use href={`#${a.icon}`} />
               </svg>
-            </div>
-            <span className="tile-arrow" aria-hidden="true">
-              &rarr;
             </span>
-            <b>{t.title}</b>
-            <span>{t.blurb}</span>
+            <span className="action-text">
+              <b>{t(a.title)}</b>
+              <span>{t(a.desc)}</span>
+            </span>
+            <svg className="icon action-chevron">
+              <use href="#i-chevron" />
+            </svg>
           </Link>
         ))}
       </div>

@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { getSupabaseServer } from '@/lib/supabase-server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import Mascot from '@/components/Mascot';
+import { getLocale } from '@/lib/i18n-server';
+import { createTranslator, dateLocale } from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,14 +13,16 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatExpiry(value: string | null): string {
-  if (!value) return 'Permanent';
-  const date = new Date(value);
-  if (date < new Date()) return 'Expired';
-  return date.toLocaleString();
-}
-
 export default async function DashboardPage() {
+  const locale = await getLocale();
+  const t = createTranslator(locale);
+  const formatExpiry = (value: string | null) => {
+    if (!value) return t('common.permanent');
+    const date = new Date(value);
+    if (date < new Date()) return t('common.expired');
+    return date.toLocaleString(dateLocale(locale));
+  };
+
   const authClient = await getSupabaseServer();
   const {
     data: { user },
@@ -27,18 +31,15 @@ export default async function DashboardPage() {
   if (!user) {
     return (
       <div className="card empty">
-        <Mascot size={132} />
+        <Mascot size={104} />
         <div>
-          <h1 className="page-title">Dashboard</h1>
-          <p className="sub">
-            You&rsquo;re browsing as a guest — everything on Zero Share works without
-            an account. Sign in to keep track of what you&rsquo;ve shared.
-          </p>
+          <h1 className="page-title">{t('dash.title')}</h1>
+          <p className="sub">{t('dash.guest')}</p>
           <Link href="/login" className="btn primary">
             <svg className="icon">
               <use href="#i-users" />
             </svg>
-            Log in
+            {t('dash.login')}
           </Link>
         </div>
       </div>
@@ -95,8 +96,8 @@ export default async function DashboardPage() {
   return (
     <div>
       <div className="card">
-        <h1 className="page-title">Dashboard</h1>
-        <p className="sub">Signed in as {user.email}</p>
+        <h1 className="page-title">{t('dash.title')}</h1>
+        <p className="sub">{t('dash.signedInAs', { email: user.email ?? '' })}</p>
 
         <div className="grid3">
           <div className="box">
@@ -106,7 +107,7 @@ export default async function DashboardPage() {
               </svg>
               <div>
                 <b>{qrList.length}</b>
-                <span>QR codes</span>
+                <span>{t('dash.qrCount')}</span>
               </div>
             </div>
           </div>
@@ -117,7 +118,7 @@ export default async function DashboardPage() {
               </svg>
               <div>
                 <b>{fileList.length}</b>
-                <span>Files shared</span>
+                <span>{t('dash.filesShared')}</span>
               </div>
             </div>
           </div>
@@ -128,7 +129,7 @@ export default async function DashboardPage() {
               </svg>
               <div>
                 <b>{totalDownloads}</b>
-                <span>Total downloads</span>
+                <span>{t('dash.downloads')}</span>
               </div>
             </div>
           </div>
@@ -136,20 +137,18 @@ export default async function DashboardPage() {
       </div>
 
       <div className="card">
-        <h2>My QR codes</h2>
+        <h2>{t('dash.myQr')}</h2>
         {qrList.length === 0 ? (
-          <p className="sub" style={{ marginTop: 10 }}>
-            Nothing yet. Codes you create while signed in show up here.
-          </p>
+          <p className="sub tight">{t('dash.noQr')}</p>
         ) : (
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Code</th>
-                  <th>Type</th>
-                  <th>Destination</th>
-                  <th>Expires</th>
+                  <th>{t('col.code')}</th>
+                  <th>{t('col.type')}</th>
+                  <th>{t('col.destination')}</th>
+                  <th>{t('col.expires')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -170,20 +169,18 @@ export default async function DashboardPage() {
       </div>
 
       <div className="card">
-        <h2>My files</h2>
+        <h2>{t('dash.myFiles')}</h2>
         {fileList.length === 0 ? (
-          <p className="sub" style={{ marginTop: 10 }}>
-            Nothing yet. Files you share while signed in show up here.
-          </p>
+          <p className="sub tight">{t('dash.noFiles')}</p>
         ) : (
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>File</th>
-                  <th>Size</th>
-                  <th>Downloads</th>
-                  <th>Expires</th>
+                  <th>{t('col.file')}</th>
+                  <th>{t('col.size')}</th>
+                  <th>{t('col.downloads')}</th>
+                  <th>{t('col.expires')}</th>
                 </tr>
               </thead>
               <tbody>

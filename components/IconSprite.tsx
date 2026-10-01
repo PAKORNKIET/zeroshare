@@ -14,6 +14,11 @@ export default function IconSprite() {
         <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></symbol>
         <symbol id="i-mega" viewBox="0 0 24 24"><path d="M4 10v4h3l9 4.5V5.5L7 10z" /><path d="M13 5.5a5 5 0 0 1 0 13" /></symbol>
         <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3" /><path d="M3.5 20v-1.5A5.5 5.5 0 0 1 9 13a5.5 5.5 0 0 1 5.5 5.5V20" /><circle cx="17.5" cy="9.5" r="2.3" /><path d="M15.8 13.2a4.6 4.6 0 0 1 4.7 4.6V20" /></symbol>
+        <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4" /></symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" /></symbol>
+        <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3L10.5 13.5" /><path d="M21 3l-6.5 18-4-7.5L3 9.5z" /></symbol>
+        <symbol id="i-chevron" viewBox="0 0 24 24"><polyline points="9 5 16 12 9 19" /></symbol>
+        <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" /><line x1="12" y1="11" x2="12" y2="16.5" /><line x1="12" y1="7.6" x2="12" y2="7.7" /></symbol>
       </defs>
     </svg>
   );

@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import { getSupabaseBrowserAuth } from '@/lib/supabase-browser';
 import type { User } from '@supabase/supabase-js';
+import { useI18n } from '@/components/I18nProvider';
 
 export default function LoginPage() {
+  const { t } = useI18n();
   const supabase = getSupabaseBrowserAuth();
 
   const [user, setUser] = useState<User | null>(null);
@@ -48,7 +50,7 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
     } else {
-      setMessage('Account created. Check your email to confirm, then sign in.');
+      setMessage(t('login.created'));
     }
   }
 
@@ -61,7 +63,7 @@ export default function LoginPage() {
   if (checking) {
     return (
       <div className="card">
-        <p className="sub">Loading…</p>
+        <p className="sub">{t('common.loading')}</p>
       </div>
     );
   }
@@ -70,10 +72,10 @@ export default function LoginPage() {
     return (
       <div>
         <div className="card">
-          <h1 className="page-title">Account</h1>
-          <p className="sub">Signed in as {user.email}</p>
+          <h1 className="page-title">{t('login.account')}</h1>
+          <p className="sub">{t('dash.signedInAs', { email: user.email ?? '' })}</p>
           <button className="btn danger" onClick={handleSignOut} disabled={busy}>
-            {busy ? 'Signing out…' : 'Sign out'}
+            {busy ? t('login.signingOut') : t('login.signOut')}
           </button>
         </div>
       </div>
@@ -83,41 +85,38 @@ export default function LoginPage() {
   return (
     <div>
       <div className="card">
-        <h1 className="page-title">{mode === 'signin' ? 'Log in' : 'Create an account'}</h1>
-        <p className="sub">
-          Signing in lets you track the QR codes and files you&rsquo;ve shared. Guest
-          use never requires this.
-        </p>
+        <h1 className="page-title">{mode === 'signin' ? t('login.titleIn') : t('login.titleUp')}</h1>
+        <p className="sub">{t('login.sub')}</p>
 
         <div className="tabs">
           <button
             className={`tabbtn ${mode === 'signin' ? 'active' : ''}`}
             onClick={() => setMode('signin')}
           >
-            Log in
+            {t('login.tabIn')}
           </button>
           <button
             className={`tabbtn ${mode === 'signup' ? 'active' : ''}`}
             onClick={() => setMode('signup')}
           >
-            Sign up
+            {t('login.tabUp')}
           </button>
         </div>
 
-        <label>Email</label>
+        <label>{t('login.email')}</label>
         <input
-          type="text"
+          type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
         />
 
-        <label>Password</label>
+        <label>{t('login.password')}</label>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="At least 6 characters"
+          placeholder={t('login.passwordHint')}
         />
 
         <button
@@ -125,11 +124,11 @@ export default function LoginPage() {
           onClick={mode === 'signin' ? handleSignIn : handleSignUp}
           disabled={busy || !email || !password}
         >
-          {busy ? 'Please wait…' : mode === 'signin' ? 'Log in' : 'Create account'}
+          {busy ? t('login.wait') : mode === 'signin' ? t('login.titleIn') : t('login.create')}
         </button>
 
         {error && <p className="error-text">{error}</p>}
-        {message && <p className="sub" style={{ color: 'var(--good)' }}>{message}</p>}
+        {message && <p className="success-text">{message}</p>}
       </div>
     </div>
   );
